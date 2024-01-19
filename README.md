@@ -24,7 +24,7 @@ This Go package provides a generic, extensible MongoDB repository with advanced 
 To use this MongoDB repository package, you need to have Go installed on your machine. The package can be installed using the following Go command:
 
 ```bash
-go get -u path/to/your/mongodb/repository/package
+go get -u github.com/dmitrymomot/mongo-repository
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ go get -u path/to/your/mongodb/repository/package
 Import the package into your Go file:
 
 ```go
-import "path/to/your/mongodb/repository/package"
+import "github.com/dmitrymomot/mongo-repository"
 ```
 
 ### Basic CRUD Operations
