@@ -67,6 +67,17 @@ type Repository[T any] interface {
 	// If no document is found, it returns an error of type ErrNotFound.
 	// If an error occurs during the find operation, it returns the error.
 	FindOneByFilter(ctx context.Context, filters ...FilterFunc) (T, error)
+
+	// Exists checks if a document exists in the collection based on the provided filters.
+	// It accepts one or more FilterFunc functions that modify the filter criteria.
+	// The function returns true if a document exists and false otherwise.
+	// If an error occurs during the find operation, it returns the error.
+	Exists(ctx context.Context, filters ...FilterFunc) (bool, error)
+
+	// Count returns the number of documents in the collection based on the provided filters.
+	// It accepts one or more FilterFunc functions that modify the filter criteria.
+	// The function returns the number of documents and an error, if any.
+	Count(ctx context.Context, filters ...FilterFunc) (int64, error)
 }
 
 // mongoRepository is a generic struct that represents a MongoDB repository.
@@ -87,14 +98,14 @@ func NewMongoRepository[T any](db *mongo.Database, collectionName string) *mongo
 // It takes a context.Context as the first argument, the key for the index as the second argument,
 // and optional IndexOption(s) as the third argument(s).
 // The function returns an error if the index creation fails.
-func (r *mongoRepository[T]) CreateIndex(ctx context.Context, key interface{}, opts ...IndexOption) error {
+func (r *mongoRepository[T]) CreateIndex(ctx context.Context, key string, opts ...IndexOption) error {
 	indexOpts := options.Index()
 	for _, opt := range opts {
 		opt(indexOpts)
 	}
 
 	indexModel := mongo.IndexModel{
-		Keys:    key,
+		Keys:    bson.D{{Key: key, Value: 1}},
 		Options: indexOpts,
 	}
 
@@ -110,6 +121,10 @@ func (r *mongoRepository[T]) CreateIndex(ctx context.Context, key interface{}, o
 func (r *mongoRepository[T]) Create(ctx context.Context, model T) (string, error) {
 	result, err := r.collection.InsertOne(ctx, model)
 	if err != nil {
+		// Handle duplicate key error
+		if mongo.IsDuplicateKeyError(err) {
+			return "", errors.Join(ErrFailedToCreate, ErrDuplicate, err)
+		}
 		return "", errors.Join(ErrFailedToCreate, err)
 	}
 	oid, ok := result.InsertedID.(primitive.ObjectID)
@@ -272,6 +287,9 @@ func (r *mongoRepository[T]) FindManyByFilter(ctx context.Context, skip int64, l
 	for _, f := range filters {
 		filter = f(filter)
 	}
+	if limit == 0 {
+		limit = 10
+	}
 	findOptions := options.Find().SetSkip(skip).SetLimit(limit)
 	cursor, err := r.collection.Find(ctx, filter, findOptions)
 	if err != nil {
@@ -319,4 +337,35 @@ func (r *mongoRepository[T]) FindOneByFilter(ctx context.Context, filters ...Fil
 		return result, errors.Join(ErrFailedToFindOneByFilter, err)
 	}
 	return result, nil
+}
+
+// Exists checks if a document exists in the collection based on the provided filters.
+// It accepts one or more FilterFunc functions that modify the filter criteria.
+// The function returns true if a document exists and false otherwise.
+// If an error occurs during the find operation, it returns the error.
+func (r *mongoRepository[T]) Exists(ctx context.Context, filters ...FilterFunc) (bool, error) {
+	filter := bson.D{}
+	for _, f := range filters {
+		filter = f(filter)
+	}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, errors.Join(ErrFailedToFindOneByFilter, err)
+	}
+	return count > 0, nil
+}
+
+// Count returns the number of documents in the collection based on the provided filters.
+// It accepts one or more FilterFunc functions that modify the filter criteria.
+// The function returns the number of documents and an error, if any.
+func (r *mongoRepository[T]) Count(ctx context.Context, filters ...FilterFunc) (int64, error) {
+	filter := bson.D{}
+	for _, f := range filters {
+		filter = f(filter)
+	}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, errors.Join(ErrFailedToFindOneByFilter, err)
+	}
+	return count, nil
 }

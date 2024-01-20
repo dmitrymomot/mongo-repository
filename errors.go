@@ -5,6 +5,7 @@ import "errors"
 // Predefined errors
 var (
 	ErrNotFound                 = errors.New("document not found")
+	ErrDuplicate                = errors.New("document already exists")
 	ErrFailedToFindByID         = errors.New("failed to find document by id")
 	ErrFailedToFindByIDs        = errors.New("failed to find documents by ids")
 	ErrInvalidDocumentID        = errors.New("invalid document id")
