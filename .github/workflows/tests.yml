@@ -17,6 +17,14 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo
+        ports:
+          - 27017:27017
+        options: "--health-cmd='mongo --eval \"db.runCommand({ ping: 1 })\"' --health-interval=10s --health-timeout=5s --health-retries=5"
+
     steps:
       - uses: actions/checkout@v3
 
@@ -29,4 +37,6 @@ jobs:
         run: go mod download -x
 
       - name: Run tests
+        env:
+          MONGODB_URI: mongodb://localhost:27017
         run: go test -v -p 1 -count=1 -race -cover ./...
