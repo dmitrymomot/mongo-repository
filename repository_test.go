@@ -1,4 +1,4 @@
-package tests
+package mongorepository_test
 
 import (
 	"context"
@@ -20,6 +20,7 @@ func TestRepository(t *testing.T) {
 	db := setupMongoDB(t)
 	repo := mongorepository.NewMongoRepository[User](db, "users")
 
+	var id string
 	email := "john@example.com"
 	user := User{Name: "John Doe", Email: email}
 
@@ -138,5 +139,17 @@ func TestRepository(t *testing.T) {
 		foundUser, err := repo.FindByID(context.Background(), id)
 		require.ErrorIs(t, err, mongorepository.ErrNotFound)
 		assert.Empty(t, foundUser)
+
+		// Test delete non-existent user
+		delCount, err = repo.Delete(context.Background(), id)
+		require.ErrorIs(t, err, mongorepository.ErrNotFound)
+		assert.Equal(t, int64(0), delCount)
+	})
+
+	// Test try to update non-existent user
+	t.Run("UpdateNonExistent", func(t *testing.T) {
+		updCount, err := repo.Update(context.Background(), id, user)
+		require.ErrorIs(t, err, mongorepository.ErrNotFound)
+		assert.Equal(t, int64(0), updCount)
 	})
 }

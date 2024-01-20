@@ -213,6 +213,9 @@ func (r *mongoRepository[T]) Update(ctx context.Context, id string, model T) (in
 		}
 		return 0, errors.Join(ErrFailedToUpdate, err)
 	}
+	if result.MatchedCount == 0 {
+		return 0, errors.Join(ErrFailedToUpdate, ErrNotFound)
+	}
 	return result.ModifiedCount, nil
 }
 
@@ -255,6 +258,9 @@ func (r *mongoRepository[T]) Delete(ctx context.Context, id string) (int64, erro
 			return 0, errors.Join(ErrFailedToDelete, ErrNotFound, err)
 		}
 		return 0, errors.Join(ErrFailedToDelete, err)
+	}
+	if result.DeletedCount == 0 {
+		return 0, errors.Join(ErrFailedToDelete, ErrNotFound)
 	}
 	return result.DeletedCount, nil
 }

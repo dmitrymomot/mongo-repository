@@ -1,4 +1,4 @@
-package tests
+package mongorepository_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 func getMongoDBURI() string {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
-		return "mongodb://localhost:27017" // default URI
+		return "mongodb://username:password@localhost:27017" // default URI
 	}
 	return uri
 }
