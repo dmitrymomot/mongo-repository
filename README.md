@@ -70,44 +70,7 @@ func findUsers(repo repository.Repository[User]) {
 
 The package includes a full-text search builder to create text queries easily. The text search query uses the [MongoDB text search](https://docs.mongodb.com/manual/text-search/) feature.
 
-#### Creating a Text Index in Your Collection
-
-When you want to create a text index, specify the field and use the TextIndex option. This field typically stores the text you want to search. MongoDB uses this field to determine if a document is a match. You can also specify the weights for each field to control the relative score of each field.
-
-```go
-// Create a text index
-err := repo.CreateIndex( context.TODO(),  "name",  mongorepository.TextIndex(
-    mongorepository.NewTextIndexConfig(
-        map[string]int32{
-            "name": 10,
-            "bio":  5,
-            "tags": 1,
-        },
-    ),
-))
-```
-
-#### Document Structure
-
-Ensure your documents have a field (like name) that stores the text you want to search. This field is used by MongoDB to determine if a document is a match.
-
-```go
-type User struct {
-    ID   primitive.ObjectID `bson:"_id,omitempty"`
-    Name string             `bson:"name"`
-    Bio  string             `bson:"bio"`
-    Tags []string           `bson:"tags"`
-    // Other fields...
-}
-```
-
-#### Searching for Documents
-
-To search for documents, use the Text helper to create a text search query. The text search query uses the [MongoDB text search](https://docs.mongodb.com/manual/text-search/) feature.
-
-```go
-users, err := repo.FindManyByFilter(ctx, 0, 10, mongorepository.TextSearch("John"))
-```
+How to use it - see the tests: [full_text_search_test.go](full_text_search_test.go).
 
 ### TTL Index
 

@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type User struct {
-	ID    primitive.ObjectID `bson:"_id,omitempty"`
-	Name  string             `bson:"name"`
-	Email string             `bson:"email"`
-}
-
 func TestRepository(t *testing.T) {
+	type User struct {
+		ID    primitive.ObjectID `bson:"_id,omitempty"`
+		Name  string             `bson:"name"`
+		Email string             `bson:"email"`
+	}
+
 	db := setupMongoDB(t)
 	repo := mongorepository.NewMongoRepository[User](db, "users")
 
